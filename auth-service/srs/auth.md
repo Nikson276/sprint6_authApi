@@ -1,16 +1,10 @@
-# Docs for Cinema app
-Общая структура проекта "Онлайн кинотеатр"
-
-**Модульная схема:**
-
-![alt text](attachements/image-2.png)
-
-**Диаграма контейнеров приложения C2**
-
-![alt text](attachements/image-1.png)
-
-
 # Auth service
+
+Проектная работа 6 спринта
+
+https://github.com/mletunenko/Async_API_sprint_1_team
+
+<!-- TODO Заменить ссылку на актуальный реп -->
 
 ## Бизнес-требования
 
