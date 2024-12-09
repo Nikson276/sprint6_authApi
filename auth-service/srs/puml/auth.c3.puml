@@ -1,0 +1,49 @@
+@startuml Component diagram for Auth service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+' uncomment the following line and comment the first to use locally
+' !include <C4/C4_Container>
+' docs https://github.com/plantuml-stdlib/C4-PlantUML
+
+LAYOUT_LANDSCAPE()
+AddElementTag("frontend", $bgColor="#8a3bd5", $shape=RoundedBoxShape())
+AddElementTag("gateway", $bgColor="#93c47d", $shape=RoundedBoxShape())
+
+title Component diagram for Auth service
+
+Container(spa, "Single-Page App", "Frontend Mock", "Web UI", $tags="frontend")
+Container(backend_api, "API Application", "Fast API", "Provides cinema service via AsyncAPI", $tags="backendContainer")
+ContainerDb(db, "SQL Database", "PostgreSQL Database", "Stores user account data")
+ContainerDb(nosqldb, "NoSQL Database", "Redis key:value", "Stores acces-token")
+
+
+Container_Boundary(auth_app, "AUTH Application") {
+    Component(gateway, "Gateway", "NGINX", "reverse proxy", $tags="gateway")
+    Container_Boundary(api_authentication, "API для сайта и личного кабинета") {
+        Component(sign, "Sign In Controller", "Rest", "Регистрация, вход, обновление токена")
+        Component(accounts, "Account Management Controller", "Rest", "История входов, изменения, выход всех")
+        Component(security, "Security Component", "TOTP", "Пароли, 2Auth, токены")
+        Component(jwt, "JWT service provider", "Create, refresh token by login and pass", "Provides JWT token create/refresh")
+    }
+    Container_Boundary(api_authorization, "API для управления доступами") {
+        Component(IdMS, "Identity Management System", "CRUD для управления ролями", "Организация доступа по ролям (RBAC)")
+    }
+
+    Rel(sign, security, "Uses", "JSON/HTTPS")
+    Rel(accounts, security, "Uses", "JSON/HTTPS")
+    Rel(security, db, "Read & write to", "Account, RefreshToken")
+    Rel(security, jwt, "Access/Refresh token", "JSON/HTTPS")
+    Rel(security, nosqldb, "Read & write to", "AccessToken")    
+    Rel(accounts, db, "Read & write to", "Account data, RefreshToken")
+    Rel(IdMS, db, "Read & write to", "roles and permissions")
+
+    '
+    BiRel(gateway, sign, "Uses", "JSON/HTTPS")
+    BiRel(gateway, accounts, "Uses", "JSON/HTTPS")
+    BiRel(gateway, IdMS, "Uses", "JSON/HTTPS")
+
+}
+
+Rel_Down(spa, backend_api, "Uses", "JSON/HTTPS")
+Rel(backend_api, gateway, "Uses", "JSON/HTTPS")
+
+@enduml

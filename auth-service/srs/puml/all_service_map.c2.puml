@@ -1,0 +1,48 @@
+@startuml cinema service container diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+' uncomment the following line and comment the first to use locally
+' !include <C4/C4_Container>
+' docs https://github.com/plantuml-stdlib/C4-PlantUML
+
+' LAYOUT_TOP_DOWN()
+' LAYOUT_LEFT_RIGHT()
+LAYOUT_LANDSCAPE()
+' LAYOUT_AS_SKETCH()
+' LAYOUT_WITH_LEGEND()
+
+SHOW_PERSON_OUTLINE()
+AddElementTag("backendContainer", $fontColor=$ELEMENT_FONT_COLOR, $bgColor="#335DA5", $shape=EightSidedShape(), $legendText="backend container\neight sided")
+AddRelTag("async", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine())
+AddRelTag("sync/async", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DottedLine())
+
+title Container diagram for Cinema service
+
+Person(customer, Customer, "A customer of the cinema, with personal accounts")
+Person(admin, Administrator, "A admin of the cinema, with special accounts")
+
+System_Boundary(c1, "Cinema app") {
+    Container(admin_panel, "Admin Panel", "Django App", "Maintain database and service")
+    Container(spa, "Single-Page App", "Frontend Mock", "Web UI, web site page to using service")
+    Container(search_service, "Search engine", "ETL", "Provides a full-text search service")
+    ContainerDb(database, "Database", "PostgreSQL Database", "Stores user, film data")
+    Container(backend_api, "API Application", "Fast API", "Provides cinema service via AsyncAPI", $tags="backendContainer")
+    Container(auth, "Auth service", "Fast API?", "Provides auth service via API", $tags="backendContainer")
+}
+
+' System_Ext(email_system, "E-Mail System", "The internal Microsoft Exchange system")
+' System_Ext(banking_system, "Mainframe Banking System", "Stores all of the core banking information about customers, accounts, transactions, etc.")
+
+Rel(admin, admin_panel, "Uses", "HTTPS")
+Rel(customer, spa, "Uses", "HTTPS")
+
+
+Rel(spa, backend_api, "Uses", "sync, JSON/HTTPS", $tags="sync/async")
+Rel_R(admin_panel, database, "Reads from and writes to", "sync, ORM")
+Rel_Down(backend_api, auth,  "Using", "async", $tags="async")
+Rel_Up(backend_api, search_service,  "Reads from", "async", $tags="async")
+Rel_Down(database, search_service, "ETL", "async", $tags="async")
+
+' Rel_Back(customer, email_system, "Sends e-mails to")
+' Rel_Back(email_system, backend_api, "Sends e-mails using", "sync, SMTP")
+' Rel_Neighbor(backend_api, banking_system, "Uses", "sync/async, XML/HTTPS")
+@enduml

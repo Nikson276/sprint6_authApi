@@ -1,0 +1,306 @@
+openapi: 3.0.3
+info:
+  title: Authentication and Role Management API
+  description: API для аутентификации и управления ролями пользователей.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Основной сервер
+paths:
+  /auth/register:
+    post:
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+        '400':
+          description: Ошибка валидации данных
+
+  /auth/login:
+    post:
+      summary: Вход пользователя в аккаунт
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+        '401':
+          description: Неверные логин или пароль
+
+  /auth/token/refresh:
+    post:
+      summary: Обновление access-токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+                - refresh_token
+      responses:
+        '200':
+          description: Токен успешно обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        '401':
+          description: Неверный или истекший refresh-токен
+
+  /auth/logout:
+    post:
+      summary: Выход пользователя из аккаунта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+                - refresh_token
+      responses:
+        '200':
+          description: Успешный выход
+
+  /auth/update:
+    patch:
+      summary: Изменение логина или пароля пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Личные данные успешно обновлены
+        '400':
+          description: Ошибка валидации данных
+
+  /auth/history:
+    get:
+      summary: Получение истории входов
+      responses:
+        '200':
+          description: История входов пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    timestamp:
+                      type: string
+                    ip_address:
+                      type: string
+        '401':
+          description: Неавторизованный запрос
+
+  /roles:
+    get:
+      summary: Получение списка ролей
+      responses:
+        '200':
+          description: Список всех ролей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+        '401':
+          description: Неавторизованный запрос
+
+    post:
+      summary: Создание новой роли
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '201':
+          description: Роль успешно создана
+        '400':
+          description: Ошибка валидации данных
+
+  /roles/{role_id}:
+    delete:
+      summary: Удаление роли
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Роль успешно удалена
+        '404':
+          description: Роль не найдена
+
+    patch:
+      summary: Изменение роли
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      responses:
+        '200':
+          description: Роль успешно изменена
+        '404':
+          description: Роль не найдена
+
+  /roles/assign:
+    post:
+      summary: Назначение роли пользователю
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                role_id:
+                  type: string
+              required:
+                - user_id
+                - role_id
+      responses:
+        '200':
+          description: Роль успешно назначена
+        '404':
+          description: Пользователь или роль не найдены
+
+  /roles/revoke:
+    post:
+      summary: Удаление роли у пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                role_id:
+                  type: string
+              required:
+                - user_id
+                - role_id
+      responses:
+        '200':
+          description: Роль успешно удалена
+        '404':
+          description: Пользователь или роль не найдены
+
+  /roles/check:
+    post:
+      summary: Проверка наличия прав у пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                role_id:
+                  type: string
+              required:
+                - user_id
+                - role_id
+      responses:
+        '200':
+          description: Пользователь имеет права
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  has_access:
+                    type: boolean
+        '404':
+          description: Пользователь или роль не найдены
